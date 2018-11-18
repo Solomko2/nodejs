@@ -12,7 +12,12 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/node": "^10.12.9",
     "babel-preset-env": "^1.7.0",
     "babel-register": "^6.26.0"
+  },
+  "dependencies": {
+    "string_decoder": "^1.1.1",
+    "url": "^0.11.0"
   }
 }

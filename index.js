@@ -4,10 +4,23 @@
 */
 // dependencies
 import * as http from 'http';
+import * as https from 'https';
 import * as url from 'url';
 import { StringDecoder } from 'string_decoder';
-// the server should respond all requests with a string
-const server = http.createServer((req, res) => {
+import * as config from './config';
+import * as fs from 'fs';
+import Lib from './lib/data';
+// TESTING
+// @TODO delete this
+const lib = new Lib();
+lib.create('test', 'newFile', { 'foo': 'bar' }, (err) => {
+    console.log('this was the error ', err);
+});
+const httpsServerOptions = {
+    key: fs.readFileSync('./https/key.pem'),
+    cert: fs.readFileSync('./https/cert.pem')
+};
+const unifiedServer = (req, res) => {
     // Get the url and parsed
     const parsedUrl = url.parse(req.url, true);
     // Get the path
@@ -22,20 +35,6 @@ const server = http.createServer((req, res) => {
     // Get payload, if any
     const decoder = new StringDecoder('utf-8');
     let buffer = '';
-    // Define handlers
-    const handlers = {};
-    // Sample handler
-    handlers.sample = (data, callback) => {
-        callback(200, { message: 'Ok' });
-    };
-    // Not found handler
-    handlers.notFound = (data, callback) => {
-        callback(500);
-    };
-    // Define a request router
-    const router = {
-        'sample': handlers.sample,
-    };
     req.on('data', (data) => {
         buffer += decoder.write(data);
     });
@@ -52,7 +51,6 @@ const server = http.createServer((req, res) => {
             ? handlers[trimmedPath]
             : handlers.notFound;
         chosenHandler(data, (statusCode, payload) => {
-            console.log(1, payload);
             statusCode = typeof (statusCode) === 'number'
                 ? statusCode
                 : 200;
@@ -60,11 +58,30 @@ const server = http.createServer((req, res) => {
             // Convert payload to a string
             const payloadStr = JSON.stringify(payload);
             // return the response
+            res.setHeader('Content-Type', 'application/json');
             res.writeHead(statusCode);
             res.end(payloadStr);
             console.log('Returning this response:  ', buffer);
         });
     });
-});
+};
+// Define handlers
+const handlers = {};
+// Sample handler
+handlers.ping = (data, callback) => {
+    callback(200);
+};
+// Not found handler
+handlers.notFound = (data, callback) => {
+    callback(400);
+};
+// Define a request router
+const router = {
+    'ping': handlers.ping
+};
+// the server should respond all requests with a string
+const httpServer = http.createServer(unifiedServer);
+const httpsServer = https.createServer(httpsServerOptions, unifiedServer);
 // Start the server and have it listen on port 3000
-server.listen(3000, console.log.bind(null, 'start node app on 3000'));
+httpServer.listen(config.httpPort, console.log.bind(null, `start node app on ${config.httpPort}`));
+httpsServer.listen(config.httpsPort, console.log.bind(null, `start node app on ${config.httpsPort}`));

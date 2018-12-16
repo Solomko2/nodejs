@@ -7,15 +7,12 @@ import * as http from 'http';
 import * as https from 'https';
 import * as url from 'url';
 import { StringDecoder } from 'string_decoder';
-import * as config from './config';
+import * as config from './lib/config';
 import * as fs from 'fs';
-import Lib from './lib/data';
-// TESTING
-// @TODO delete this
-const lib = new Lib();
-lib.create('test', 'newFile', { 'foo': 'bar' }, (err) => {
-    console.log('this was the error ', err);
-});
+import Helpers from './lib/helpers';
+import Handlers from './lib/handlers';
+const helpers = new Helpers();
+const handlers = new Handlers();
 const httpsServerOptions = {
     key: fs.readFileSync('./https/key.pem'),
     cert: fs.readFileSync('./https/cert.pem')
@@ -45,7 +42,7 @@ const unifiedServer = (req, res) => {
             queryStringObject,
             method,
             headers,
-            payload: buffer
+            payload: helpers.parseJsonToObject(buffer)
         };
         const chosenHandler = typeof (router[trimmedPath]) !== 'undefined'
             ? handlers[trimmedPath]
@@ -65,19 +62,10 @@ const unifiedServer = (req, res) => {
         });
     });
 };
-// Define handlers
-const handlers = {};
-// Sample handler
-handlers.ping = (data, callback) => {
-    callback(200);
-};
-// Not found handler
-handlers.notFound = (data, callback) => {
-    callback(400);
-};
 // Define a request router
 const router = {
-    'ping': handlers.ping
+    'ping': handlers.ping,
+    'users': handlers.users
 };
 // the server should respond all requests with a string
 const httpServer = http.createServer(unifiedServer);

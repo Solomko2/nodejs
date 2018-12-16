@@ -8,10 +8,12 @@ interface ILib {
 // Container for the module (to be exported)
 class Lib implements ILib {
   baseDir: any;
+
   constructor() {
     this.baseDir = path.join(__dirname, '/../.data/');
   }
 
+  // Write data to a file
   create(dir, file, data, callback) {
     fs.open(`${this.baseDir}${dir}/${file}.json`, 'wx', (err, fileDescriptor) => {
       if(!err && fileDescriptor) {
@@ -35,7 +37,55 @@ class Lib implements ILib {
       }
     })
   };
-};
+
+  // Read data from a file
+  read(dir, file, callback) {
+    fs.readFile(`${this.baseDir}${dir}/${file}.json`, 'utf8', callback);
+  }
+
+  // Update data from a file
+  update(dir, file, data, callback) {
+    fs.open(`${this.baseDir}${dir}/${file}.json`, 'r+', (err, fileDescriptor) => {
+      if(!err && fileDescriptor) {
+        const stringData = JSON.stringify(data);
+
+        fs.ftruncate((fileDescriptor as any), (err) => {
+          if(!err) {
+            fs.writeFile(fileDescriptor, stringData, (err) => {
+              if(!err) {
+                fs.close(fileDescriptor, (err) => {
+                  if(!err) {
+                    callback(false);
+                  } else {
+                    callback('Error closing new file');
+                  }
+                })
+              } else {
+                callback('Error writing to exist file')
+              }
+            })
+          } else {
+            callback('Error truncating file');
+          }
+        })
+      } else {
+        callback('Could not open the file for updating, it may not exist yet');
+      }
+    })
+  }
+
+  // Delete a file
+  delete(dir, file, callback) {
+    fs.unlink(`${this.baseDir}${dir}/${file}.json`, (err) => {
+      if(!err) {
+        callback(false);
+      } else {
+        callback('Error deleting file');
+      }
+    })
+  }
+}
+
 
 // Export the module
 export default Lib;

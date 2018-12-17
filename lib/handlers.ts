@@ -78,9 +78,9 @@ class Handlers {
         }
       });
     } else {
-
+      callback(400, {'Error': 'Missing required fields'})
     }
-  }
+  };
 
   private get(data, callback) {
 

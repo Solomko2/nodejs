@@ -60,7 +60,7 @@ const unifiedServer = (req, res) => {
       ? handlers[trimmedPath]
       : handlers.notFound;
 
-    chosenHandler(data, (statusCode, payload) => {
+    chosenHandler.bind(handlers)(data, (statusCode, payload) => {
 
       statusCode = typeof (statusCode) === 'number'
         ? statusCode

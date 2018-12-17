@@ -47,7 +47,7 @@ const unifiedServer = (req, res) => {
         const chosenHandler = typeof (router[trimmedPath]) !== 'undefined'
             ? handlers[trimmedPath]
             : handlers.notFound;
-        chosenHandler(data, (statusCode, payload) => {
+        chosenHandler.bind(handlers)(data, (statusCode, payload) => {
             statusCode = typeof (statusCode) === 'number'
                 ? statusCode
                 : 200;

@@ -98,8 +98,7 @@ class Handlers {
   users(data, callback) {
     const acceptableMethods = ['post', 'get', 'put', 'delete'];
     if(acceptableMethods.indexOf(data.method) > -1) {
-      console.log(this);
-      this.post(data, callback);
+      this[data.method](data, callback);
     } else {
       callback(405);
     }

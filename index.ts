@@ -9,10 +9,9 @@ import * as url from 'url';
 import { StringDecoder } from 'string_decoder';
 import * as config from './lib/config';
 import * as fs from 'fs';
-import Helpers from './lib/helpers';
 import Handlers from './lib/handlers';
+import { parseJsonToObject } from './lib/helpers';
 
-const helpers = new Helpers();
 const handlers = new Handlers();
 
 const httpsServerOptions = {
@@ -53,7 +52,7 @@ const unifiedServer = (req, res) => {
       queryStringObject,
       method,
       headers,
-      payload: helpers.parseJsonToObject(buffer)
+      payload: parseJsonToObject(buffer)
     };
 
     const chosenHandler = typeof (router[trimmedPath]) !== 'undefined'

@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { parseJsonToObject } from './helpers';
 
 interface ILib {
   baseDir: any;
@@ -40,7 +41,14 @@ class Lib implements ILib {
 
   // Read data from a file
   read(dir, file, callback) {
-    fs.readFile(`${this.baseDir}${dir}/${file}.json`, 'utf8', callback);
+    fs.readFile(`${this.baseDir}${dir}/${file}.json`, 'utf8', (err, data) => {
+      if(!err && data) {
+       const parseData = parseJsonToObject(data);
+        callback(false, parseData);
+      } else {
+        callback(err, data);
+      }
+    });
   }
 
   // Update data from a file

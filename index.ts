@@ -9,10 +9,25 @@ import * as url from 'url';
 import { StringDecoder } from 'string_decoder';
 import * as config from './lib/config';
 import * as fs from 'fs';
-import Handlers from './lib/handlers';
 import { parseJsonToObject } from './lib/helpers';
+import Lib from './lib/data';
+import { User } from './lib/user';
+import { Token } from './lib/token';
 
-const handlers = new Handlers();
+const lib = new Lib();
+const usersInstance = new User(lib);
+const tokenInstance = new Token(lib);
+
+const handlers = {
+  users: usersInstance.users.bind(usersInstance),
+  tokens: tokenInstance.tokens.bind(tokenInstance),
+  ping: (data, callback) => {
+    callback(200);
+  },
+  notFound: (data, callback) => {
+    callback(400);
+  }
+};
 
 const httpsServerOptions = {
   key: fs.readFileSync('./https/key.pem'),
@@ -59,7 +74,7 @@ const unifiedServer = (req, res) => {
       ? handlers[trimmedPath]
       : handlers.notFound;
 
-    chosenHandler.bind(handlers)(data, (statusCode, payload) => {
+    chosenHandler(data, (statusCode, payload) => {
 
       statusCode = typeof (statusCode) === 'number'
         ? statusCode
@@ -73,7 +88,7 @@ const unifiedServer = (req, res) => {
       res.setHeader('Content-Type', 'application/json');
       res.writeHead(statusCode);
       res.end(payloadStr);
-      console.log('Returning this response:  ', buffer);
+      console.log('Returning this response:  ', payload);
     });
   });
 
@@ -82,7 +97,8 @@ const unifiedServer = (req, res) => {
 // Define a request router
 const router: any = {
   'ping': handlers.ping,
-  'users': handlers.users
+  'users': handlers.users,
+  'tokens': handlers.tokens
 };
 
 // the server should respond all requests with a string

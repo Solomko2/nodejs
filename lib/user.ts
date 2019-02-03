@@ -1,29 +1,15 @@
-import Lib from './data';
 import { hash } from './helpers';
+import { ILib } from './data';
 
-const lib = new Lib();
-
-class Handlers {
-  // private readonly handlers: Record<string, any> = {};
-
-  constructor() {}
-
-  // Sample handler
-  ping(data, callback) {
-    callback(200);
-  };
-
-  // Not found handler
-  notFound(data, callback) {
-    callback(400);
-  };
+export class User {
+  constructor(private lib: ILib) {}
 
   // Required data: firstName, lastName, phone, password, tosAgreement
   // Optional data: none
-  private post(data, callback) {
+  post(data, callback) {
     // check that all required fields are filled out
     const firstName = typeof(data.payload.firstName) === 'string'
-      && data.payload.firstName.trim().length > 0
+    && data.payload.firstName.trim().length > 0
       ? data.payload.firstName.trim()
       : false;
     const lastName = typeof(data.payload.lastName) === 'string'
@@ -45,7 +31,7 @@ class Handlers {
 
     if(firstName && lastName && phone && password && tosAgreement) {
       // Make sure that the user doesnt already exist
-      lib.read('users', phone, (err, data) => {
+      this.lib.read('users', phone, (err, data) => {
         if(err) {
           const hashedPassword = hash(password);
 
@@ -60,7 +46,7 @@ class Handlers {
             };
 
             // Store the user
-            lib.create('users', phone, userObject, (err) => {
+            this.lib.create('users', phone, userObject, (err) => {
               if(!err) {
                 callback(200);
               } else {
@@ -77,20 +63,19 @@ class Handlers {
         }
       });
     } else {
-      callback(400, {'Error': 'Missing required fields'});
+      callback(400, {'Error': 'Missing required fields 1111'});
     }
   };
-
 
   // Users - get
   // Required data: phone
   // Optional data: none
   // @TODO Only let an authenticated user access their object. Don't let them access anyone else's
-  private get(data, callback) {
+  get(data, callback) {
     const phone = typeof(data.queryStringObject.phone) === 'string' && data.queryStringObject.phone.length > 10 ? data.queryStringObject.phone.trim() : false;
 
     if(phone) {
-      lib.read('users', phone, (err, data) => {
+      this.lib.read('users', phone, (err, data) => {
         if(!err && data) {
           delete data.hashedPassword;
           callback(200, data);
@@ -107,7 +92,7 @@ class Handlers {
   // Required data : phone
   // Optional data : firstName, lastName, password, (at least one must be specified)
   // @TODO Only let an authenticated user update own object. Don't let them update anyone else's
-  private put(data, callback) {
+  put(data, callback) {
     // Check required filed
     const phone = typeof(data.payload.phone) === 'string' && data.payload.phone.length > 10 ? data.payload.phone.trim() : false;
 
@@ -127,7 +112,7 @@ class Handlers {
 
     if(phone) {
       if(firstName || lastName || password) {
-        lib.read('users', phone, (err, userData) => {
+        this.lib.read('users', phone, (err, userData) => {
           if(!err && userData) {
             if(firstName) {
               userData.firstName = firstName;
@@ -139,7 +124,7 @@ class Handlers {
               userData.hashedPassword = hash(password);
             }
 
-            lib.update('users', phone, userData, (err) => {
+            this.lib.update('users', phone, userData, (err) => {
               if(!err) {
                 callback(200);
               } else {
@@ -164,13 +149,13 @@ class Handlers {
   // Required field - phone
   // @TODO Only let an authenticated user delete their object. Don't let them delete anyone else's
   // @TODO Cleanup (delete) any other files associated with this user
-  private delete(data, callback) {
+  delete(data, callback) {
     const phone = typeof(data.queryStringObject.phone) === 'string' && data.queryStringObject.phone.length > 10 ? data.queryStringObject.phone.trim() : false;
 
     if(phone) {
-      lib.read('users', phone, (err, data) => {
+      this.lib.read('users', phone, (err, data) => {
         if(!err && data) {
-          lib.delete('users', phone, (err) => {
+          this.lib.delete('users', phone, (err) => {
             if(!err) {
               callback(200);
             } else {
@@ -196,5 +181,3 @@ class Handlers {
     }
   }
 }
-
-export default Handlers;

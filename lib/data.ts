@@ -2,9 +2,12 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { parseJsonToObject } from './helpers';
 
-interface ILib {
+export interface ILib {
   baseDir: any;
   create: any;
+  read: any;
+  update: any;
+  delete: any;
 }
 // Container for the module (to be exported)
 class Lib implements ILib {

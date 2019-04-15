@@ -8,6 +8,7 @@ export interface ILib {
   read: any;
   update: any;
   delete: any;
+  verifyToken: any;
 }
 // Container for the module (to be exported)
 class Lib implements ILib {
@@ -94,6 +95,20 @@ class Lib implements ILib {
         callback('Error deleting file');
       }
     })
+  }
+
+  verifyToken(id, phone, callback) {
+    this.read('tokens', id, function(err, tokenData) {
+      if(!err && tokenData) {
+        if(tokenData.phone === phone && tokenData.expires > Date.now()) {
+          callback(true);
+        } else {
+          callback(false);
+        }
+      } else {
+        callback(false)
+      }
+    });
   }
 }
 

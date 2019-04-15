@@ -13,14 +13,17 @@ import { parseJsonToObject } from './lib/helpers';
 import Lib from './lib/data';
 import { User } from './lib/user';
 import { Token } from './lib/token';
+import { Check } from './lib/check';
 
 const lib = new Lib();
+const checkInstance = new Check(lib);
 const usersInstance = new User(lib);
 const tokenInstance = new Token(lib);
 
 const handlers = {
   users: usersInstance.users.bind(usersInstance),
   tokens: tokenInstance.tokens.bind(tokenInstance),
+  checks: tokenInstance.tokens.bind(checkInstance),
   ping: (data, callback) => {
     callback(200);
   },
@@ -98,7 +101,8 @@ const unifiedServer = (req, res) => {
 const router: any = {
   'ping': handlers.ping,
   'users': handlers.users,
-  'tokens': handlers.tokens
+  'tokens': handlers.tokens,
+  'checks': handlers.checks
 };
 
 // the server should respond all requests with a string

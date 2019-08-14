@@ -1,114 +1,27 @@
-/*
-* Primary file for API
-*
-*/
-// dependencies
-import * as http from 'http';
-import * as https from 'https';
-import * as url from 'url';
-import { StringDecoder } from 'string_decoder';
-import * as config from './lib/config';
-import * as fs from 'fs';
-import { parseJsonToObject } from './lib/helpers';
-import Lib from './lib/data';
-import { User } from './lib/user';
-import { Token } from './lib/token';
-import { Check } from './lib/check';
+/**
+ * Primary file for the API
+ */
 
-const lib = new Lib();
-const checkInstance = new Check(lib);
-const usersInstance = new User(lib);
-const tokenInstance = new Token(lib);
+// Dependencies
+import { server } from './server';
+// import { workers } from './workers';
 
-const handlers = {
-  users: usersInstance.users.bind(usersInstance),
-  tokens: tokenInstance.tokens.bind(tokenInstance),
-  checks: tokenInstance.tokens.bind(checkInstance),
-  ping: (data, callback) => {
-    callback(200);
-  },
-  notFound: (data, callback) => {
-    callback(400);
-  }
-};
+// Declare the app
+const app = {} as any;
 
-const httpsServerOptions = {
-  key: fs.readFileSync('./https/key.pem'),
-  cert: fs.readFileSync('./https/cert.pem')
-};
+// Init function
+app.init = () => {
+  // Start the server
+  server.init();
 
-const unifiedServer = (req, res) => {
-  // Get the url and parsed
-  const parsedUrl = url.parse(req.url, true);
-
-  // Get the path
-  const path = parsedUrl.pathname;
-  const trimmedPath = path.replace(/^\/+|\/+$/g, '');
-
-  // Get the query string as an object
-  const queryStringObject = parsedUrl.query;
-
-  // Get the headers as an object
-  const headers = req.headers;
-
-  // Get the http method
-  const method = req.method.toLowerCase();
-
-  // Get payload, if any
-  const decoder = new StringDecoder('utf-8');
-  let buffer = '';
-
-  req.on('data', (data) => {
-    buffer += decoder.write(data);
-  });
-
-  req.on('end', () => {
-    buffer += decoder.end();
-
-    const data = {
-      trimmedPath,
-      queryStringObject,
-      method,
-      headers,
-      payload: parseJsonToObject(buffer)
-    };
-
-    const chosenHandler = typeof (router[trimmedPath]) !== 'undefined'
-      ? handlers[trimmedPath]
-      : handlers.notFound;
-
-    chosenHandler(data, (statusCode, payload) => {
-
-      statusCode = typeof (statusCode) === 'number'
-        ? statusCode
-        : 200;
-      payload = typeof (payload) == 'object' ? payload : {};
-
-      // Convert payload to a string
-      const payloadStr = JSON.stringify(payload);
-
-      // return the response
-      res.setHeader('Content-Type', 'application/json');
-      res.writeHead(statusCode);
-      res.end(payloadStr);
-      console.log('Returning this response:  ', payload);
-    });
-  });
+  // Start the workers
+  // workers.init();
 
 };
 
-// Define a request router
-const router: any = {
-  'ping': handlers.ping,
-  'users': handlers.users,
-  'tokens': handlers.tokens,
-  'checks': handlers.checks
-};
+// Execute
+app.init();
 
-// the server should respond all requests with a string
-const httpServer = http.createServer(unifiedServer);
-const httpsServer = https.createServer(httpsServerOptions, unifiedServer);
+// Export the app
+export { app }
 
-// Start the server and have it listen on port 3000
-httpServer.listen(config.httpPort, console.log.bind(null, `start node app on ${config.httpPort}`));
-httpsServer.listen(config.httpsPort, console.log.bind(null, `start node app on ${config.httpsPort}`));

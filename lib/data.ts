@@ -97,6 +97,17 @@ class Lib implements ILib {
     })
   }
 
+  list(dir, callback) {
+    fs.readdir(`${this.baseDir}${dir}/`, (err, data) => {
+      if(!err && data && data.length > 0) {
+        const trimmedFileNames = data.map((fileName) => fileName.replace('.json', ''));
+        callback(false, trimmedFileNames);
+      } else {
+        callback(err, data)
+      }
+    })
+  }
+
   verifyToken(id, phone, callback) {
     this.read('tokens', id, function(err, tokenData) {
       if(!err && tokenData) {
